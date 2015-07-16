@@ -1,0 +1,5 @@
+D:\workspace\UtilityTools\TestDir\test_gbk.txt	GBK
+D:\workspace\UtilityTools\TestDir\test_utf16be.txt	UTF-16BE
+D:\workspace\UtilityTools\TestDir\test_utf16le.txt	UTF-16LE
+D:\workspace\UtilityTools\TestDir\test_utf8-noBOM.txt	UTF-8无BOM
+D:\workspace\UtilityTools\TestDir\test_utf8.txt	UTF-8
