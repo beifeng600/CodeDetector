@@ -17,6 +17,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import util.common.file.encoding.ChangeEncoding;
+
 /**
  *  Author: beifeng600
  * 	编码检测的主类
@@ -215,6 +217,8 @@ public class CodeDetector {
 	
 	public static String changeCodeFile(String filePath, String resPath, String src_encoding, String dst_encoding){
 		  
+		List<String> sent_list = new ArrayList<String>();
+		
         try {   
         	FileInputStream fileInputStream = new FileInputStream(filePath);
         	InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, src_encoding);
@@ -245,7 +249,15 @@ public class CodeDetector {
 					}
 				}
 				
-				bufferedWriter.write(strLine);
+				sent_list.add(strLine);
+				
+//				bufferedWriter.write(strLine);
+//				bufferedWriter.newLine();
+			}
+			
+			for(int index=0; index<sent_list.size(); ++index){
+				String transform_encoding = transform_encoding(sent_list.get(index), out_encoding, index);
+				bufferedWriter.write(transform_encoding);
 				bufferedWriter.newLine();
 			}
 			
@@ -259,6 +271,69 @@ public class CodeDetector {
 	        inputStreamReader.close();
 	        fileInputStream.close();
 		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return "";
+	}
+	
+	
+	public static String transform_encoding(String UTF16BE_str, String dst_encoding, int lineNum){
+		
+		boolean is_first_line = false;
+		
+		if(lineNum == 1){
+			is_first_line = true;
+		}
+		
+		try{
+			if(ChangeEncoding.GBK.equalsIgnoreCase(dst_encoding)){
+				return UTF16BE_str;
+			}else if(ChangeEncoding.UTF8.equalsIgnoreCase(dst_encoding)){
+				
+				return UTF16BE_str;
+				
+			}else if(ChangeEncoding.UTF16BE.equalsIgnoreCase(dst_encoding)){
+				byte[] headByte = {(byte)0xFE, (byte)0xFF};
+				
+				byte[] lineBytes = UTF16BE_str.getBytes("UTF-16BE");
+				
+				if(is_first_line){
+					return new String(lineBytes, "UTF-16BE");
+				}
+				
+				byte[] copyArray = new byte[lineBytes.length+2];
+				
+				System.arraycopy(lineBytes, 0, copyArray, 2, lineBytes.length);
+				copyArray[0] = headByte[0];
+				copyArray[1] = headByte[1];
+				
+				return new String(copyArray, "UTF-16BE");
+
+			}else if(ChangeEncoding.UTF16LE.equalsIgnoreCase(dst_encoding)){
+				byte[] headByte = {(byte)0xFF, (byte)0xFE};
+				
+				byte[] lineBytes = UTF16BE_str.getBytes("UTF-16BE");
+				
+				for(int i=0; i<lineBytes.length-1; i+=2){
+					byte temp_byte = lineBytes[i];
+					lineBytes[i] = lineBytes[i+1];
+					lineBytes[i+1] = temp_byte;
+				}
+				
+				if(is_first_line){
+					return new String(lineBytes, "UTF-16LE");
+				}
+				
+				byte[] copyArray = new byte[lineBytes.length+2];
+				System.arraycopy(lineBytes, 0, copyArray, 2, lineBytes.length);
+				copyArray[0] = headByte[0];
+				copyArray[1] = headByte[1];
+				
+				return new String(copyArray, "UTF-16LE");
+			}
+		}catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
